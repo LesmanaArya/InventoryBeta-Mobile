@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:inventory_beta_mobile/screens/inventory_list_form.dart';
+import 'package:inventory_beta_mobile/widgets/left_drawer.dart';
+import 'package:inventory_beta_mobile/screens/display_item.dart';
 
 class InventoryComponent {
   final String name;
@@ -21,10 +24,19 @@ class InventoryCard extends StatelessWidget {
         // Area responsive terhadap sentuhan
         onTap: () {
           // Memunculkan SnackBar ketika diklik
-          ScaffoldMessenger.of(context)
-            ..hideCurrentSnackBar()
-            ..showSnackBar(SnackBar(
-                content: Text("Kamu telah menekan tombol ${item.name}!")));
+
+          if (item.name == "Add Some Item") {
+            Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => const InventoryFormPage()));
+          }
+          if (item.name == "Open Your Inventory") {
+            Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => const DisplayItemPage()));
+          }
         },
         child: Container(
           // Container untuk menyimpan Icon dan Text
@@ -56,8 +68,10 @@ class InventoryCard extends StatelessWidget {
 class MyHomePage extends StatelessWidget {
   MyHomePage({Key? key}) : super(key: key);
   final List<InventoryComponent> items = [
-    InventoryComponent("Open Your Inventory", Icons.visibility, Colors.greenAccent),
-    InventoryComponent("Add Some Item", Icons.add_circle_outline, Colors.cyanAccent),
+    InventoryComponent(
+        "Open Your Inventory", Icons.visibility, Colors.greenAccent),
+    InventoryComponent(
+        "Add Some Item", Icons.add_circle_outline, Colors.cyanAccent),
     InventoryComponent("Logout", Icons.logout, Colors.redAccent),
   ];
   @override
@@ -74,13 +88,13 @@ class MyHomePage extends StatelessWidget {
               onPressed: () {
                 ScaffoldMessenger.of(context)
                   ..hideCurrentSnackBar()
-                  ..showSnackBar(
-                  const SnackBar(content: Text("Kamu menekan tombol Akun"))
-                );
+                  ..showSnackBar(const SnackBar(
+                      content: Text("Kamu menekan tombol Akun")));
               },
             )
           ],
         ),
+        drawer: const LeftDrawer(),
         body: SingleChildScrollView(
           // Widget wrapper yang dapat discroll
           child: Padding(
@@ -139,7 +153,6 @@ class MyHomePage extends StatelessWidget {
               icon: Icon(Icons.account_balance_wallet),
             ),
           ],
-        )
-    );
+        ));
   }
 }
