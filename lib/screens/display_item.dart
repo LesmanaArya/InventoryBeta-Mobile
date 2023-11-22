@@ -29,17 +29,12 @@ class InventoryCard extends StatelessWidget {
                 ),
                 const Padding(padding: EdgeInsets.all(3)),
                 Text(
-                  item.price.toString(),
+                  item.amount.toString(),
                   textAlign: TextAlign.center,
                   style: const TextStyle(color: Colors.black, fontSize: 30),
                 ),
                 Text(
                   item.desc,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(color: Colors.black, fontSize: 30),
-                ),
-                Text(
-                  item.effect,
                   textAlign: TextAlign.center,
                   style: const TextStyle(color: Colors.black, fontSize: 30),
                 ),

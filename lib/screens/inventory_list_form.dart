@@ -1,15 +1,19 @@
+// ignore_for_file: use_build_context_synchronously
+
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:inventory_beta_mobile/widgets/left_drawer.dart';
 import 'package:inventory_beta_mobile/screens/menu.dart';
 import 'package:inventory_beta_mobile/list_item.dart';
+import 'package:pbp_django_auth/pbp_django_auth.dart';
+import 'package:provider/provider.dart';
 
 class Item {
   final String name;
-  final int price;
+  final int amount;
   final String desc;
-  final String effect;
-
-  Item(this.name, this.price, this.desc, this.effect);
+  Item(this.name, this.amount, this.desc);
 }
 
 class InventoryFormPage extends StatefulWidget {
@@ -22,12 +26,12 @@ class InventoryFormPage extends StatefulWidget {
 class _InventoryFormPageState extends State<InventoryFormPage> {
   final _formKey = GlobalKey<FormState>();
   String _name = "";
-  int _price = 0;
+  int _amount = 0;
   String _description = "";
-  String _effect = "";
 
   @override
   Widget build(BuildContext context) {
+    final request = context.watch<CookieRequest>();
     return Scaffold(
         appBar: AppBar(
           title: const Center(
@@ -71,15 +75,15 @@ class _InventoryFormPageState extends State<InventoryFormPage> {
                 padding: const EdgeInsets.all(8.0),
                 child: TextFormField(
                   decoration: InputDecoration(
-                    hintText: "Price",
-                    labelText: "Price",
+                    hintText: "Amount",
+                    labelText: "Amount",
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(5.0),
                     ),
                   ),
                   onChanged: (String? value) {
                     setState(() {
-                      _price = int.parse(value!);
+                      _amount = int.parse(value!);
                     });
                   },
                   validator: (String? value) {
@@ -87,7 +91,7 @@ class _InventoryFormPageState extends State<InventoryFormPage> {
                       return "Please fill in all the fields!";
                     }
                     if (int.tryParse(value) == null) {
-                      return "Your price must be an integer";
+                      return "Your amount must be an integer";
                     }
                     return null;
                   },
@@ -116,29 +120,6 @@ class _InventoryFormPageState extends State<InventoryFormPage> {
                   },
                 ),
               ),
-              Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: TextFormField(
-                  decoration: InputDecoration(
-                    hintText: "Effect",
-                    labelText: "Effect",
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(5.0),
-                    ),
-                  ),
-                  onChanged: (String? value) {
-                    setState(() {
-                      _effect = value!;
-                    });
-                  },
-                  validator: (String? value) {
-                    if (value == null || value.isEmpty) {
-                      return "Please fill in all the fields!";
-                    }
-                    return null;
-                  },
-                ),
-              ),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -150,7 +131,11 @@ class _InventoryFormPageState extends State<InventoryFormPage> {
                             MaterialStateProperty.all(Colors.indigo),
                       ),
                       onPressed: () {
-                          Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) =>MyHomePage(),));
+                        Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => MyHomePage(),
+                            ));
                       },
                       child: const Text(
                         "Back",
@@ -165,38 +150,35 @@ class _InventoryFormPageState extends State<InventoryFormPage> {
                         backgroundColor:
                             MaterialStateProperty.all(Colors.indigo),
                       ),
-                      onPressed: () {
+                      onPressed: () async {
                         if (_formKey.currentState!.validate()) {
-                          showDialog(
-                              context: context,
-                              builder: (context) {
-                                return AlertDialog(
-                                  title:
-                                      const Text('Produk berhasil tersimpan'),
-                                  content: SingleChildScrollView(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text('Nama: $_name'),
-                                        Text('Harga: $_price'),
-                                        Text('Deskripsi: $_description'),
-                                        Text('Efek: $_effect')
-                                      ],
-                                    ),
-                                  ),
-                                  actions: [
-                                    TextButton(
-                                      child: const Text('OK'),
-                                      onPressed: () {
-                                        listItem.add(Item(_name, _price,
-                                            _description, _effect));
-                                        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) =>MyHomePage(),));
-                                      },
-                                    ),
-                                  ],
-                                );
-                              });
+                          // Kirim ke Django dan tunggu respons
+                          //// TODO: Ganti URL dan jangan lupa tambahkan trailing slash (/) di akhir URL!
+                          final response = await request.postJson(
+                              "https://arya-lesmana21-tugas.pbp.cs.ui.ac.id/create-flutter/",
+                              jsonEncode(<String, String>{
+                                'name': _name,
+                                'amount': _amount.toString(),
+                                'description': _description,
+                                // TODO: Sesuaikan field data sesuai dengan aplikasimu
+                              }));
+                          if (response['status'] == 'success') {
+                            ScaffoldMessenger.of(context)
+                                .showSnackBar(const SnackBar(
+                              content: Text("Produk baru berhasil disimpan!"),
+                            ));
+                            Navigator.pushReplacement(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) => MyHomePage()),
+                            );
+                          } else {
+                            ScaffoldMessenger.of(context)
+                                .showSnackBar(const SnackBar(
+                              content: Text(
+                                  "Terdapat kesalahan, silakan coba lagi."),
+                            ));
+                          }
                         }
                       },
                       child: const Text(
